@@ -10,7 +10,7 @@ public class Filterer {
     private HashMap<String, HashSet<MetaString>> tokenMap = new HashMap<String, HashSet<MetaString>>();
     private HashMap<String, HashSet<String>> matchMap = new HashMap<String, HashSet<String>>();
     private Tree<String> bkTree = new Tree<String>();
-    private LevenshteinDistance levenshtein = new LevenshteinDistance();
+    private IDistance distance = new LevenshteinDistance();
 
     public Filterer(ArrayList<String> possibilitiesArray) {
         possibilities.addAll(possibilitiesArray);
@@ -34,10 +34,11 @@ public class Filterer {
         // Get the results from the BK tree
         HashSet<String> bkResults = new HashSet<String>();
         _searchBKTree(bkTree, query, radius, bkResults);
+        HashSet<String> filteredResults = filterExcludedDifferences(query, bkResults);
 
         // Convert to original tokens
         HashSet<String> tokens = new HashSet<String>();
-        for (String subString : bkResults) {
+        for (String subString : filteredResults) {
             tokens.addAll(matchMap.get(subString));
         }
 
@@ -52,8 +53,8 @@ public class Filterer {
         Comparator<MetaString> comparator = new Comparator<MetaString>() {
             @Override
             public int compare(MetaString ms1, MetaString ms2) {
-                return levenshtein.distance(query, ms1.getOriginal()) -
-                        levenshtein.distance(query, ms2.getOriginal());
+                return distance.distance(query, ms1.getOriginal()) -
+                        distance.distance(query, ms2.getOriginal());
             }
         };
 
@@ -61,10 +62,21 @@ public class Filterer {
         return results;
     }
 
+    private static HashSet<String> filterExcludedDifferences(String query, HashSet<String> bkResults) {
+        HashSet<String> filteredResults = new HashSet<String>();
+        char firstQueryChar = query.charAt(0);
+        for (String bkResult : bkResults) {
+            if (bkResult.charAt(0) == firstQueryChar) {
+                filteredResults.add(bkResult);
+            }
+        }
+        return filteredResults;
+    }
+
     private void _searchBKTree(Tree<String> tree, String query, int radius, HashSet<String> results) {
         // Get root string and distance to query
         String root = tree.getData();
-        int d = levenshtein.distance(root, query);
+        int d = distance.distance(root, query);
 
         // Add root if we can
         if (d <= radius) {
@@ -138,7 +150,7 @@ public class Filterer {
         if (item.equals(tree.getData())) return;
 
         // Else, insert item in an existing subtree or as a new child
-        int d = levenshtein.distance(tree.getData(), item);
+        int d = distance.distance(tree.getData(), item);
         if (tree.hasEdge(d)) {
             _insertInBKTree(tree.getChild(d), item);
         } else {

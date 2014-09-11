@@ -2,23 +2,11 @@ package filtering;
 
 import java.util.*;
 
-public class LevenshteinDistance {
+public class LevenshteinDistance extends CachingDistance implements IDistance {
 
     private static String TAG = "LevenshteinDistance";
 
-    private HashMap<DoubleStringKey,Integer> cache = new HashMap<DoubleStringKey,Integer>();
-
-    public int distance(String s, String t) {
-        int d;
-        DoubleStringKey st = new DoubleStringKey(s ,t);
-        if (!cache.containsKey(st)) {
-            cache.put(st, _distance(s, t));
-        }
-
-        return cache.get(st);
-    }
-
-    private static int _distance(String s, String t) {
+    protected int computeDistance(String s, String t) {
         // Lengths
         int m = s.length();
         int n = t.length();
