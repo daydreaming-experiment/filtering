@@ -12,7 +12,7 @@ public class Main {
 
         ArrayList<String> possibilities = new ArrayList<String>(Arrays.asList(new String[] {
                 // From Home
-                "Cooking", "Eating", "Housework (dishes, cleaning)", "Care (shower, makeup)", "Nursing", "Petting",
+                "Cooking|food, eat", "Eating", "Housework (dishes, cleaning)", "Care (shower, makeup)", "Nursing", "Petting",
                 "Intimate relations", "Having a nap", "Resting", "Playing music", "Making a drawing", "Video game",
                 "Watching a program", "Computer, Internet or Email", "Reading",
                 // From Commuting

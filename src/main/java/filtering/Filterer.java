@@ -97,7 +97,17 @@ public class Filterer {
 
         for (String s : possibilities) {
             MetaString ms = new MetaString(s);
-            for (String token : ms.getLowerTokens()) {
+
+            // Add tokens
+            for (String token : ms.getTokens()) {
+                if (!tokenMap.containsKey(token)) {
+                    tokenMap.put(token, new HashSet<MetaString>());
+                }
+                tokenMap.get(token).add(ms);
+            }
+
+            // Add tags
+            for (String token : ms.getTags()) {
                 if (!tokenMap.containsKey(token)) {
                     tokenMap.put(token, new HashSet<MetaString>());
                 }
