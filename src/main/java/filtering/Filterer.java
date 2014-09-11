@@ -7,8 +7,8 @@ public class Filterer {
     private static String TAG = "Filterer";
 
     private HashSet<String> possibilities = new HashSet<String>();
-    private HashMap<String, HashSet<MetaString>> suffixMap = new HashMap<String, HashSet<MetaString>>();
-    private HashMap<String, HashSet<String>> subStringMap = new HashMap<String, HashSet<String>>();
+    private HashMap<String, HashSet<MetaString>> tokenMap = new HashMap<String, HashSet<MetaString>>();
+    private HashMap<String, HashSet<String>> matchMap = new HashMap<String, HashSet<String>>();
     private Tree<String> bkTree = new Tree<String>();
     private LevenshteinDistance levenshtein = new LevenshteinDistance();
 
@@ -20,7 +20,7 @@ public class Filterer {
         // no need to remove punctuation
         // no need to lemmatize
 
-        buildSubStringMap();
+        buildMatchMap();
         buildBKTree();
     }
 
@@ -29,20 +29,20 @@ public class Filterer {
     }
 
     private ArrayList<MetaString> search(final String query, int radius) {
-        // Get the results in terms of sub-strings
-        HashSet<String> subStrings = new HashSet<String>();
-        _searchBKTree(bkTree, query, radius, subStrings);
+        // Get the results from the BK tree
+        HashSet<String> bkResults = new HashSet<String>();
+        _searchBKTree(bkTree, query, radius, bkResults);
 
-        // Convert to original suffixes
-        HashSet<String> suffixes = new HashSet<String>();
-        for (String subString : subStrings) {
-            suffixes.addAll(subStringMap.get(subString));
+        // Convert to original tokens
+        HashSet<String> tokens = new HashSet<String>();
+        for (String subString : bkResults) {
+            tokens.addAll(matchMap.get(subString));
         }
 
         // Convert back to original strings
         HashSet<MetaString> preResults = new HashSet<MetaString>();
-        for (String suffix : suffixes) {
-            preResults.addAll(suffixMap.get(suffix));
+        for (String suffix : tokens) {
+            preResults.addAll(tokenMap.get(suffix));
         }
 
         // Re-order
@@ -77,41 +77,39 @@ public class Filterer {
         }
     }
 
+    private void buildMatchMap() {
+        buildTokenMap();
+        Logger.i(TAG, "Building match map");
 
-    private void buildSubStringMap() {
-        buildSuffixMap();
-        Logger.i(TAG, "Building sub-string map");
-
-        for (String suffix : suffixMap.keySet()) {
-            for (int i = 2; i <= suffix.length(); i++) {
-                String sub = suffix.substring(0, i);
-                if (!subStringMap.containsKey(sub)) {
-                    subStringMap.put(sub, new HashSet<String>());
+        for (String token : tokenMap.keySet()) {
+            for (int i = 2; i <= token.length(); i++) {
+                String prefix = token.substring(0, i);
+                if (!matchMap.containsKey(prefix)) {
+                    matchMap.put(prefix, new HashSet<String>());
                 }
-                subStringMap.get(sub).add(suffix);
+                matchMap.get(prefix).add(token);
             }
         }
     }
 
-    private void buildSuffixMap() {
-        Logger.i(TAG, "Building suffix map");
+    private void buildTokenMap() {
+        Logger.i(TAG, "Building token map");
+
         for (String s : possibilities) {
             MetaString ms = new MetaString(s);
-            String lower = ms.getLower();
-            int l = lower.length();
-            for (int i = 0; i <= l - 2; i++) {
-                String sub = lower.substring(i);
-                if (!suffixMap.containsKey(sub)) {
-                    suffixMap.put(sub, new HashSet<MetaString>());
+            for (String token : ms.getLowerTokens()) {
+                if (!tokenMap.containsKey(token)) {
+                    tokenMap.put(token, new HashSet<MetaString>());
                 }
-                suffixMap.get(sub).add(ms);
+                tokenMap.get(token).add(ms);
             }
         }
     }
 
     private void buildBKTree() {
         Logger.i(TAG, "Building BK Tree");
-        Set<String> items = subStringMap.keySet();
+
+        Set<String> items = matchMap.keySet();
         String firstItem = null;
         for (String item : items) {
             if (firstItem == null) {
