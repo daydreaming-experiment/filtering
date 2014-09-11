@@ -11,3 +11,10 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
     compile 'com.googlecode.lanterna:lanterna:2.1.8'
 }
+
+task(runSimple, dependsOn: 'classes', type: JavaExec) {
+    main = 'filtering.Main'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+defaultTasks 'runSimple'
