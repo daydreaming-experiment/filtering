@@ -25,7 +25,9 @@ public class Filterer {
     }
 
     public ArrayList<MetaString> search(String query) {
-        return search(query.toLowerCase(), 1);
+        int distance = 0;
+        if (query.length() >= 2) distance = 1;
+        return search(query.toLowerCase(), distance);
     }
 
     private ArrayList<MetaString> search(final String query, int radius) {
